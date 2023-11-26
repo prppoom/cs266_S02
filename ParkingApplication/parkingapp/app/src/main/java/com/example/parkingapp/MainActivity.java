@@ -4,14 +4,19 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -36,7 +41,25 @@ public class MainActivity extends AppCompatActivity {
         new ParkingApplication().execute();
         }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }//end onCreateOptionsMenu
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.view_record) {
+            recreate();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }//end onOptionsItemSelected
+
     public class ParkingApplication extends AsyncTask<Void, Void, ArrayList<Map<Integer, Boolean>>> {
+        private int bookSpotId;
+        private CountDownTimer countDownTimer;
         private Socket socket;
         private ObjectOutputStream objectOutputStream;
         private ObjectInputStream objectInputStream;
@@ -54,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
         int STATUS_AVAILABLE = 0;
         int STATUS_NOT_AVAILABLE = 1;
+        int STATUS_BOOKED = 2;
 
         ViewGroup map;
 
@@ -252,7 +276,14 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View v) {
                                 if((int)view.getTag() == STATUS_AVAILABLE){
-                                    Toast.makeText(MainActivity.this,"P - " + view.getId() + " AVAILABLE",Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(MainActivity.this,"P - " + view.getId() + " AVAILABLE",Toast.LENGTH_SHORT).show();
+
+                                    bookParkingSpot(view.getId());
+                                }
+                                else if((int)view.getTag() == STATUS_BOOKED){
+                                    Toast.makeText(MainActivity.this,"P - " + view.getId() + " BOOKED",Toast.LENGTH_SHORT).show();
+
+                                    //bookParkingSpot(view.getId());
                                 }else{
                                     Toast.makeText(MainActivity.this,"P - " + view.getId() + " NOT AVAILABLE",Toast.LENGTH_SHORT).show();
                                 }
@@ -372,6 +403,268 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+        }
+
+        public void bookParkingSpot(int id){
+            final AlertDialog.Builder viewDialog = new AlertDialog.Builder(MainActivity.this);
+            viewDialog.setIcon(android.R.drawable.btn_star_big_on);
+            viewDialog.setTitle("จองช่องจอดหมายเลข "+ id);
+            viewDialog.setMessage("กรุณามาจอดรถภายในเวลา 5 นาที");
+            viewDialog.setPositiveButton("ยืนยันการจอง", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+
+                    bookSpotId = id;
+                    TextView parkingTextView = findViewById(id);
+                    parkingTextView.setTag(STATUS_BOOKED);
+                    if(id%2==0){
+                        parkingTextView.setBackgroundResource(R.drawable.car_gl);
+                    }
+                    else {
+                        parkingTextView.setBackgroundResource(R.drawable.car_gr);
+                    }
+
+                    int keyToEdit = id;
+                    Map<Integer, Boolean> mapToEdit = receivedData.get(keyToEdit-1);
+                    boolean newStatus = false;
+                    if (mapToEdit.containsKey(keyToEdit)) {
+                        mapToEdit.put(keyToEdit, newStatus);
+                    }
+
+                    Log.d("BOOK", "Data: " + receivedData);
+
+                    TextView view = findViewById(R.id.myUniqueTextViewId);
+
+                    int count = 0;
+                    for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
+                        Map<Integer, Boolean> rowData = receivedData.get(rowIndex);
+                        for (Map.Entry<Integer, Boolean> entry : rowData.entrySet()) {
+                            Integer parkingSpace = entry.getKey();
+                            Boolean isAvailable = entry.getValue();
+                            if(isAvailable)
+                                count++;
+                        }
+                    }
+
+                    view.setText("Available:" + count + "/" + receivedData.size());
+
+
+                    parkingTextView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if((int)parkingTextView.getTag() == STATUS_AVAILABLE){
+
+                                bookParkingSpot(parkingTextView.getId());
+                            }
+                            else if((int)parkingTextView.getTag() == STATUS_BOOKED){
+                                showCountDown(id);
+                            }else{
+                                Toast.makeText(MainActivity.this,"P - " + parkingTextView.getId() + " NOT AVAILABLE",Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+
+                    Toast.makeText(MainActivity.this,"จองช่องจอดหมายเลข" + id + "สำเร็จ",Toast.LENGTH_SHORT).show();
+
+                }
+            });
+            viewDialog.setNegativeButton("ยกเลิก", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            viewDialog.show();
+        }
+
+        public void showCountDown(int id){
+            // สร้าง Dialog แสดงเวลาถอยหลัง
+            final AlertDialog tickDialog = new AlertDialog.Builder(MainActivity.this).create();
+            View tickView = getLayoutInflater().inflate(R.layout.dialog_countdown, null);
+            tickDialog.setView(tickView);
+            tickDialog.setCancelable(false);
+
+            // แสดงเวลาและข้อความ
+            final TextView countdownText = tickView.findViewById(R.id.countdown_text);
+            final TextView statusText = tickView.findViewById(R.id.status_text);
+
+            // ตั้งเวลานับถอยหลัง 5 นาที
+            countDownTimer =new CountDownTimer(300000, 1000) {
+                public void onTick(long millisUntilFinished) {
+                    // แสดงเวลาที่เหลือ
+                    countdownText.setText("เหลือเวลา " + millisUntilFinished / 1000 + " วินาที");
+                }
+
+                public void onFinish() {
+                    // ทำอะไรก็ตามที่ต้องการเมื่อนับถอยหลังเสร็จสิ้น
+                    int keyToEdit = id;
+                    Map<Integer, Boolean> mapToEdit = receivedData.get(keyToEdit-1);
+                    boolean newStatus = true;
+                    if (mapToEdit.containsKey(keyToEdit)) {
+                        mapToEdit.put(keyToEdit, newStatus);
+                    }
+
+                    Log.d("BOOK", "Data: " + receivedData);
+
+                    TextView view = findViewById(R.id.myUniqueTextViewId);
+
+                    int count = 0;
+                    for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
+                        Map<Integer, Boolean> rowData = receivedData.get(rowIndex);
+                        for (Map.Entry<Integer, Boolean> entry : rowData.entrySet()) {
+                            Integer parkingSpace = entry.getKey();
+                            Boolean isAvailable = entry.getValue();
+                            if(isAvailable)
+                                count++;
+                        }
+                    }
+
+                    view.setText("Available:" + count + "/" + receivedData.size());
+
+                    TextView parkingTextView = findViewById(id);
+                    parkingTextView.setTag(STATUS_AVAILABLE);
+                    parkingTextView.setBackgroundColor(Color.GRAY);
+
+                    parkingTextView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if((int)parkingTextView.getTag() == STATUS_AVAILABLE){
+
+                                bookParkingSpot(parkingTextView.getId());
+                            }
+                            else if((int)parkingTextView.getTag() == STATUS_BOOKED){
+                                showCountDown(id);
+                            }else{
+                                Toast.makeText(MainActivity.this,"P - " + parkingTextView.getId() + " NOT AVAILABLE",Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                    tickDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "หลังจาก 5 นาที หมดเวลาการจอง", Toast.LENGTH_SHORT).show();
+                }
+            }.start();
+
+            // กำหนดการทำงานของปุ่ม "ยกเลิก"
+            Button cancelButton = tickView.findViewById(R.id.cancel_button);
+            cancelButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // ยกเลิกการจอง
+                    tickDialog.dismiss();
+                    countDownTimer.cancel();
+
+                    int keyToEdit = id;
+                    Map<Integer, Boolean> mapToEdit = receivedData.get(keyToEdit-1);
+                    boolean newStatus = true;
+                    if (mapToEdit.containsKey(keyToEdit)) {
+                        mapToEdit.put(keyToEdit, newStatus);
+                    }
+
+                    Log.d("BOOK", "Data: " + receivedData);
+
+                    TextView view = findViewById(R.id.myUniqueTextViewId);
+
+                    int count = 0;
+                    for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
+                        Map<Integer, Boolean> rowData = receivedData.get(rowIndex);
+                        for (Map.Entry<Integer, Boolean> entry : rowData.entrySet()) {
+                            Integer parkingSpace = entry.getKey();
+                            Boolean isAvailable = entry.getValue();
+                            if(isAvailable)
+                                count++;
+                        }
+                    }
+
+                    view.setText("Available:" + count + "/" + receivedData.size());
+
+
+                    TextView parkingTextView = findViewById(id);
+                    parkingTextView.setTag(STATUS_AVAILABLE);
+                    parkingTextView.setBackgroundColor(Color.GRAY);
+
+                    parkingTextView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if((int)parkingTextView.getTag() == STATUS_AVAILABLE){
+
+                                bookParkingSpot(parkingTextView.getId());
+                            }
+                            else if((int)parkingTextView.getTag() == STATUS_BOOKED){
+                                showCountDown(id);
+                            }else{
+                                Toast.makeText(MainActivity.this,"P - " + parkingTextView.getId() + " NOT AVAILABLE",Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+                    Toast.makeText(MainActivity.this, "ยกเลิกการจองช่องจอดหมายเลข" + id, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            // กำหนดการทำงานของปุ่ม "จอดเสร็จสิ้น"
+            Button finishButton = tickView.findViewById(R.id.finish_button);
+            finishButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // จอดเสร็จสิ้น
+                    tickDialog.dismiss();
+                    countDownTimer.cancel();
+
+                    int keyToEdit = id;
+                    Map<Integer, Boolean> mapToEdit = receivedData.get(keyToEdit-1);
+                    boolean newStatus = false;
+                    if (mapToEdit.containsKey(keyToEdit)) {
+                        mapToEdit.put(keyToEdit, newStatus);
+                    }
+
+                    Log.d("BOOK", "Data: " + receivedData);
+
+                    TextView view = findViewById(R.id.myUniqueTextViewId);
+
+                    int count = 0;
+                    for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
+                        Map<Integer, Boolean> rowData = receivedData.get(rowIndex);
+                        for (Map.Entry<Integer, Boolean> entry : rowData.entrySet()) {
+                            Integer parkingSpace = entry.getKey();
+                            Boolean isAvailable = entry.getValue();
+                            if(isAvailable)
+                                count++;
+                        }
+                    }
+
+                    view.setText("Available:" + count + "/" + receivedData.size());
+
+                    TextView parkingTextView = findViewById(id);
+                    parkingTextView.setTag(STATUS_NOT_AVAILABLE);
+                    if(id%2==0){
+                        parkingTextView.setBackgroundResource(R.drawable.car_rl);
+                    }
+                    else {
+                        parkingTextView.setBackgroundResource(R.drawable.car_rr);
+                    }
+
+                    parkingTextView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if((int)parkingTextView.getTag() == STATUS_AVAILABLE){
+
+                                bookParkingSpot(parkingTextView.getId());
+                            }
+                            else if((int)parkingTextView.getTag() == STATUS_BOOKED){
+                                showCountDown(id);
+                            }else{
+                                Toast.makeText(MainActivity.this,"P - " + parkingTextView.getId() + " NOT AVAILABLE",Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+                    Toast.makeText(MainActivity.this, "จอดเสร็จสิ้นการจองช่องจอดหมายเลข" + id, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            tickDialog.show();
         }
 
 

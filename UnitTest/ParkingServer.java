@@ -38,6 +38,29 @@ public class ParkingServer {
         objectOutputStream.flush();
     }
 
+    public synchronized ArrayList<Map<Integer, Boolean>> updateData(ArrayList<Map<Integer, Boolean>> data,
+            int index, String status) {
+
+        if (index <= 0 || index > data.size()) {
+            return data;
+        }
+
+        Map<Integer, Boolean> mapToEdit = data.get(index - 1);
+        boolean newStatus = false;
+        if (status.equals("false")) {
+            newStatus = false;
+        }
+        if (status.equals("true")) {
+            newStatus = true;
+        }
+        if (mapToEdit.containsKey(index)) {
+            mapToEdit.put(index, newStatus);
+        }
+
+        update = false;
+        return data;
+    }
+
     public static void main(String[] args) {
         ParkingServer parkingServer = new ParkingServer();
 
