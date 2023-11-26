@@ -85,4 +85,28 @@ public class ParkingApplication {
         }
     }
 
+    public String bookParkingSpot(ArrayList<Map<Integer, Boolean>> data, int index) {
+        if (index <= 0 || index > data.size()) {
+            return "not available";
+        } else {
+            Map<Integer, Boolean> mapToEdit = data.get(index - 1);
+            Boolean status = mapToEdit.get(index);
+            if (status) {
+                return "book";
+            } else {
+                return "not available";
+            }
+        }
+    }
+
+    public int bookingCountDown(String status, int index, ArrayList<Map<Integer, Boolean>> data) {
+        Map<Integer, Boolean> mapToEdit = data.get(index - 1);
+        Boolean boo = mapToEdit.get(index);
+        if (status.equals("book") && boo) {
+            return 30000;
+        } else {
+            return -1;
+        }
+    }
+
 }

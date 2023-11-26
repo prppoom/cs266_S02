@@ -289,6 +289,85 @@ public class UnitTestParking {
         }
     }
 
+    // UpdateData
+    @Test
+    public void testUpdateDataCorrect() {
+        // Arrange
+        ParkingServer parkingServer = new ParkingServer();
+
+        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        Boolean[] valuesEx = { false, true, true, false, true, true, true, false, false, true };
+        Boolean[] valuesRs = { true, true, true, false, true, true, true, false, false, true };
+
+        ArrayList<Map<Integer, Boolean>> expectedData = new ArrayList<>();
+        ArrayList<Map<Integer, Boolean>> inputData = new ArrayList<>();
+        ArrayList<Map<Integer, Boolean>> result;
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = valuesEx[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            expectedData.add(temp);
+        }
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = valuesRs[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            inputData.add(temp);
+        }
+
+        int index = 1;
+        String status = "false";
+
+        // Act
+        result = parkingServer.updateData(inputData, index, status);
+
+        // Assert
+        assertEquals(expectedData, result);
+    }
+
+    @Test
+    public void testUpdateDataInCorrect() {
+        // Arrange
+        ParkingServer parkingServer = new ParkingServer();
+
+        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        Boolean[] valuesEx = { false, true, true, false, true, true, true, false, false, true };
+        Boolean[] valuesRs = { true, true, true, false, true, true, true, false, false, true };
+
+        ArrayList<Map<Integer, Boolean>> expectedData = new ArrayList<>();
+        ArrayList<Map<Integer, Boolean>> inputData = new ArrayList<>();
+        ArrayList<Map<Integer, Boolean>> result;
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = valuesEx[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            expectedData.add(temp);
+        }
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = valuesRs[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            inputData.add(temp);
+        }
+
+        int index = 11;
+        String status = "false";
+
+        // Act
+        result = parkingServer.updateData(inputData, index, status);
+
+        // Assert
+        assertEquals(inputData, result);
+    }
+
     // *****ParkingApplication UnitTest*****/
 
     // ConnectSever
@@ -523,5 +602,117 @@ public class UnitTestParking {
 
         // Assert
         assertNotEquals(values.length, result.length);
+    }
+
+    // BookParkingSpot
+    @Test
+    public void TestBookParkingSpotPass() {
+        // Arrange
+        ParkingApplication parkingApplication = new ParkingApplication();
+
+        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        Boolean[] values = { true, true, true, false, true, true, true, false, false, true };
+
+        ArrayList<Map<Integer, Boolean>> data = new ArrayList<>();
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = values[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            data.add(temp);
+        }
+
+        int index = 1;
+
+        // Act
+        String result = parkingApplication.bookParkingSpot(data, index);
+
+        // Assert
+        assertEquals("book", result);
+    }
+
+    @Test
+    public void TestBookParkingSpotFail() {
+        // Arrange
+        ParkingApplication parkingApplication = new ParkingApplication();
+
+        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        Boolean[] values = { true, true, true, false, true, true, true, false, false, true };
+
+        ArrayList<Map<Integer, Boolean>> data = new ArrayList<>();
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = values[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            data.add(temp);
+        }
+
+        int index = 4;
+
+        // Act
+        String result = parkingApplication.bookParkingSpot(data, index);
+
+        // Assert
+        assertEquals("not available", result);
+    }
+
+    // bookingCountDown
+    @Test
+    public void TestBookingCountDownCorrect() {
+        // Arrange
+        ParkingApplication parkingApplication = new ParkingApplication();
+
+        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        Boolean[] values = { true, true, true, false, true, true, true, false, false, true };
+
+        ArrayList<Map<Integer, Boolean>> data = new ArrayList<>();
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = values[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            data.add(temp);
+        }
+
+        int index = 1;
+        String status = "book";
+
+        // Act
+        int result = parkingApplication.bookingCountDown(status, index, data);
+
+        // Assert
+        assertEquals(30000, result);
+    }
+
+    @Test
+    public void TestBookingCountDownInCorrect() {
+        // Arrange
+        ParkingApplication parkingApplication = new ParkingApplication();
+
+        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        Boolean[] values = { true, true, true, false, true, true, true, false, false, true };
+
+        ArrayList<Map<Integer, Boolean>> data = new ArrayList<>();
+
+        for (int i = 0; i < keys.length; i++) {
+            Integer key = keys[i];
+            Boolean value = values[i];
+            Map<Integer, Boolean> temp = new HashMap<>();
+            temp.put(key, value);
+            data.add(temp);
+        }
+
+        int index = 4;
+        String status = "not available";
+
+        // Act
+        int result = parkingApplication.bookingCountDown(status, index, data);
+
+        // Assert
+        assertEquals(-1, result);
     }
 }
