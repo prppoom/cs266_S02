@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                         TextView view = new TextView(MainActivity.this);
-                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(size+120, size);
+                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(size+100, size);
                         layoutParams.setMargins(gap, gap, gap, gap);
                         view.setLayoutParams(layoutParams);
                         view.setPadding(0, 0, 0, 2 * gap);
@@ -299,16 +299,16 @@ public class MainActivity extends AppCompatActivity {
                         view.setText("");
                         map.addView(view);
                     }
-                    else if (mockUpMap.charAt(index) == 'H') {
-                        TextView view = new TextView(MainActivity.this);
-                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, size);
-                        layoutParams.setMargins(gap, gap, gap, gap);
-                        view.setLayoutParams(layoutParams);
-                        view.setId(R.id.myUniqueTextViewId);
-                        view.setBackgroundColor(Color.TRANSPARENT);
-                        view.setText("");
-                        map.addView(view);
-                    }
+//                    else if (mockUpMap.charAt(index) == 'H') {
+//                        TextView view = new TextView(MainActivity.this);
+//                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, size);
+//                        layoutParams.setMargins(gap, gap, gap, gap);
+//                        view.setLayoutParams(layoutParams);
+//                        view.setId(R.id.myUniqueTextViewId);
+//                        view.setBackgroundColor(Color.TRANSPARENT);
+//                        view.setText("");
+//                        map.addView(view);
+//                    }
                 }
             } else {
                 final AlertDialog.Builder viewDialog = new AlertDialog.Builder(MainActivity.this);
@@ -318,6 +318,7 @@ public class MainActivity extends AppCompatActivity {
                 viewDialog.setPositiveButton("close", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        recreate();
                         dialog.dismiss();
                     }
                 });
@@ -327,31 +328,46 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void showParkingSpotIndex(ArrayList<Map<Integer, Boolean>> data) {
-            for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
-                Map<Integer, Boolean> rowData = receivedData.get(rowIndex);
-                for (Map.Entry<Integer, Boolean> entry : rowData.entrySet()) {
-                    Integer parkingSpace = entry.getKey();
-                    Boolean isAvailable = entry.getValue();
+            if(mockUpMap!="" && !receivedData.isEmpty() && receivedData != null && statusCode == 200) {
+                for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
+                    Map<Integer, Boolean> rowData = receivedData.get(rowIndex);
+                    for (Map.Entry<Integer, Boolean> entry : rowData.entrySet()) {
+                        Integer parkingSpace = entry.getKey();
+                        Boolean isAvailable = entry.getValue();
 
-                    // Find the TextView by its ID
-                    int textViewId = parkingSpace; // Assuming the ID is the parking space number
-                    TextView parkingTextView = findViewById(textViewId);
+                        // Find the TextView by its ID
+                        int textViewId = parkingSpace; // Assuming the ID is the parking space number
+                        TextView parkingTextView = findViewById(textViewId);
 
-                    if (parkingTextView != null) {
-                        parkingTextView.setText("P - " + parkingSpace);
-                        parkingTextView.setTextAppearance(R.style.BoldWhiteText);
+                        if (parkingTextView != null) {
+                            parkingTextView.setText("P - " + parkingSpace);
+                            parkingTextView.setTextAppearance(R.style.BoldWhiteText);
+                        }
                     }
                 }
+
+            }
+            else{
+                final AlertDialog.Builder viewDialog = new AlertDialog.Builder(MainActivity.this);
+                viewDialog.setIcon(R.drawable.warning);
+                viewDialog.setTitle("Failed to show index");
+                viewDialog.setMessage("no data!!!");
+                viewDialog.setPositiveButton("close", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        recreate();
+                        dialog.dismiss();
+                    }
+                });
+                viewDialog.show();
             }
         }
 
         public void showParkingSpotStatus(ArrayList<Map<Integer, Boolean>> data) {
             if(mockUpMap!="" && !receivedData.isEmpty() && receivedData != null && statusCode == 200){
-                TextView view = findViewById(R.id.myUniqueTextViewId);
+                TextView view = findViewById(R.id.countTxtview);
                 view.setBackgroundColor(Color.BLACK);
                 view.setTextAppearance(R.style.BoldWhiteText);
-                view.setGravity(Gravity.CENTER);
-                view.setId(R.id.myUniqueTextViewId);
 
                 int count = 0;
                 for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
@@ -365,6 +381,19 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 view.setText("Available:" + count + "/" + receivedData.size());
+            }else{
+                final AlertDialog.Builder viewDialog = new AlertDialog.Builder(MainActivity.this);
+                viewDialog.setIcon(R.drawable.warning);
+                viewDialog.setTitle("Failed to show status");
+                viewDialog.setMessage("no data!!!");
+                viewDialog.setPositiveButton("close", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        recreate();
+                        dialog.dismiss();
+                    }
+                });
+                viewDialog.show();
             }
 
             // Loop through the created TextViews and customize their appearance based on status
@@ -417,24 +446,42 @@ public class MainActivity extends AppCompatActivity {
 
                     bookSpotId = id;
                     TextView parkingTextView = findViewById(id);
-                    parkingTextView.setTag(STATUS_BOOKED);
-                    if(id%2==0){
-                        parkingTextView.setBackgroundResource(R.drawable.car_gl);
+                    if(id == 13){
+                        final AlertDialog.Builder viewDialog = new AlertDialog.Builder(MainActivity.this);
+                        viewDialog.setIcon(R.drawable.warning);
+                        viewDialog.setTitle("Failed to book parking spot");
+                        viewDialog.setMessage("something wrong");
+                        viewDialog.setPositiveButton("close", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                recreate();
+                                dialog.dismiss();
+                            }
+                        });
+                        viewDialog.show();
+                        Log.e("ParkingMap", "Failed to create parking map");
                     }
-                    else {
-                        parkingTextView.setBackgroundResource(R.drawable.car_gr);
+                    else{
+                        parkingTextView.setTag(STATUS_BOOKED);
+                        if(id%2==0){
+                            parkingTextView.setBackgroundResource(R.drawable.car_gl);
+                        }
+                        else {
+                            parkingTextView.setBackgroundResource(R.drawable.car_gr);
+                        }
+
+                        int keyToEdit = id;
+                        Map<Integer, Boolean> mapToEdit = receivedData.get(keyToEdit-1);
+                        boolean newStatus = false;
+                        if (mapToEdit.containsKey(keyToEdit)) {
+                            mapToEdit.put(keyToEdit, newStatus);
+                        }
                     }
 
-                    int keyToEdit = id;
-                    Map<Integer, Boolean> mapToEdit = receivedData.get(keyToEdit-1);
-                    boolean newStatus = false;
-                    if (mapToEdit.containsKey(keyToEdit)) {
-                        mapToEdit.put(keyToEdit, newStatus);
-                    }
 
                     Log.d("BOOK", "Data: " + receivedData);
 
-                    TextView view = findViewById(R.id.myUniqueTextViewId);
+                    TextView view = findViewById(R.id.countTxtview);
 
                     int count = 0;
                     for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
@@ -508,7 +555,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("BOOK", "Data: " + receivedData);
 
-                    TextView view = findViewById(R.id.myUniqueTextViewId);
+                    TextView view = findViewById(R.id.countTxtview);
 
                     int count = 0;
                     for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
@@ -564,7 +611,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("BOOK", "Data: " + receivedData);
 
-                    TextView view = findViewById(R.id.myUniqueTextViewId);
+                    TextView view = findViewById(R.id.countTxtview);
 
                     int count = 0;
                     for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
@@ -621,7 +668,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("BOOK", "Data: " + receivedData);
 
-                    TextView view = findViewById(R.id.myUniqueTextViewId);
+                    TextView view = findViewById(R.id.countTxtview);
 
                     int count = 0;
                     for (int rowIndex = 0; rowIndex < receivedData.size(); rowIndex++) {
