@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 public class ParkingServer {
@@ -68,29 +69,51 @@ public class ParkingServer {
 
     public static void main(String[] args) {
         ParkingServer parkingServer = new ParkingServer();
+        Random random = new Random();
 
         inputData = new ArrayList<>();
-        Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        Boolean[] values = { true, false, false, false, true, false, true, false,
-                false, true };
+        // Integer[] keys = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        // Boolean[] values = { true, false, false, false, true, false, true, false,
+        // false, true };
 
-        for (int i = 0; i < keys.length; i++) {
-            Integer key = keys[i];
-            Boolean value = values[i];
+        // for (int i = 0; i < keys.length; i++) {
+        // Integer key = keys[i];
+        // Boolean value = values[i];
+        // Map<Integer, Boolean> temp = new HashMap<>();
+        // temp.put(key, value);
+        // inputData.add(temp);
+        // }
+
+        for (int i = 1; i <= 40; i++) {
+            Integer key = i;
+            Boolean value = random.nextBoolean();
             Map<Integer, Boolean> temp = new HashMap<>();
             temp.put(key, value);
             inputData.add(temp);
         }
 
-        mockUpMap = "/H___/"
-                + "____/"
-                + "_PP_/"
-                + "_PP_/"
-                + "_PP_/"
-                + "_PP_/"
-                + "_PP_/"
-                + "____/";
+        // mockUpMap = "/H___/"
+        // + "____/"
+        // + "_PP_/"
+        // + "_PP_/"
+        // + "_PP_/"
+        // + "_PP_/"
+        // + "_PP_/"
+        // + "____/";
         // mockUpMap = "";
+
+        mockUpMap = "/_PP_PP_/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_______/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_PP_PP_/"
+                + "_______/";
 
         // update = true;
 
